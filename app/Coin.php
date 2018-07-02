@@ -20,4 +20,5 @@ class Coin extends Model
     {
         return $this->hasMany('App\CurrencyPair');
     }
+    
 }

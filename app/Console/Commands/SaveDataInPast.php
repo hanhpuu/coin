@@ -3,9 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\CurrencyPair;
 use App\Price;
-use Log;
 
 class SaveDataInPast extends Command
 {
@@ -40,9 +38,6 @@ class SaveDataInPast extends Command
      */
     public function handle()
     {
-        
-            Price::saveAveragePriceFromAPICall('KEY','BTC');
-        
-        
+        Price::fetchAndSaveDataPerChunk();   
     }
 }

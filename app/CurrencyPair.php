@@ -6,61 +6,67 @@ use Illuminate\Database\Eloquent\Model;
 use Validator;
 use App\Coin;
 use DB;
+use App\Source;
 
-class CurrencyPair extends Model {
+class CurrencyPair extends Model
+{
 
     public $table = 'currency_pair';
     public $timestamps = false;
-    protected $fillable = ['name','priority'];
+    protected $fillable = ['name', 'priority'];
 
-    public function prices() {
+    public function prices()
+    {
         return $this->hasMany('App\Price');
     }
 
-    public function coins() {
+    public function coins()
+    {
         return $this->hasMany('App\Coin');
     }
 
-    public static function addPairNameByAPI($request) {
+    public static function addPairByAPI($request)
+    {
         $validator = Validator::make($request->all(), [
-                    'base_currency_name' => 'required|max:5',
-                    'quote_currency_name' => 'required|max:5',
+                    'base_id' => 'required|numeric|max:5',
+                    'quote_id' => 'required|numeric|max:5',
+                    'source_id' => 'require|max:25',
         ]);
 
         if ($validator->fails()) {
-            $error = 'Please enter all coins name';
+            $error = 'Please enter correct coins data';
             throw new \Exception($error, 406);
         }
-
-        $coins_in_pair = self::checkCoinExistsOrCreate($request);
-        
+        $coins_in_pair = $request->all();
+        $base = Coin::find($coins_in_pair['base_id']);
+        $quote = Coin::find($coins_in_pair['quote_id']);
+        $source = Source::find($coins_in_pair['source_id']);
+        if (!$base  OR !$quote OR !$source) {
+            $error = 'Please enter existed coins';
+            throw new \Exception($error, 406);
+        }
         //insert currency pair into table
-        $pair_name = $coins_in_pair['base_currency_name'] . $coins_in_pair['quote_currency_name'];
-        $base_currency_id = Coin::where('name',$coins_in_pair['base_currency_name'])->firstOrFail()->id;
-        $quote_currency_id = Coin::where('name',$coins_in_pair['quote_currency_name'])->firstOrFail()->id;
-        if($quote_currency_id == 1) {
+        if ($coins_in_pair['quote_id'] == 1) {
             $priority = 1;
         } else {
             $priority = 2;
         }
         DB::table('currency_pair')->insert(
                 [
-                    'name' => $pair_name,
-                    'base_currency_id' => $base_currency_id,
-                    'quote_currency_id' => $quote_currency_id,
-                    'base_currency' => $coins_in_pair['base_currency_name'],
-                    'quote_currency' => $coins_in_pair['quote_currency_name'],
+                    'base_id' => $coins_in_pair['base_id'],
+                    'quote_id' => $coins_in_pair['quote_id'],
                     'priority' => $priority,
+                    'source_id' => $coins_in_pair['source_id'],
                 ]
         );
-        return $pair_name;
     }
-
-    public static function checkCoinExistsOrCreate($request) {
-        $coins_in_pair = $request->all();
-        Coin::firstOrCreate(['name' => $coins_in_pair['base_currency_name']]);
-        Coin::firstOrCreate(['name' => $coins_in_pair['quote_currency_name']]);
-        return $coins_in_pair;
+    
+    public static function getPairName($currency_pair)
+    {
+        $base = Coin::where('id', $currency_pair->base_currency_id)->first();
+        $quote = Coin::where('id', $currency_pair->quote_currency_id)->first();
+        $nameOfCurrencyPair = $base->name . $quote->name;
+        return $nameOfCurrencyPair;
     }
 
 }

@@ -3,30 +3,29 @@
 namespace App\Http\Controllers;
 
 use Validator;
-use App\Coin;
 use Illuminate\Http\Request;
+use App\Source;
 
-class CoinController extends Controller {
-
-    public function addCoinName(Request $request) 
+class SourceController extends Controller
+{
+    public function addSourceName(Request $request) 
     {
         $validator  = Validator::make($request->all(), [
-            'name'  => 'required|unique:coins|max:5',
+            'name'  => 'required|unique:sources|max:25',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'code' => 406,
-                'message' => 'Coin already exists!'
+                'message' => 'Source already exists!'
             ]);
         }
 
-        $coin = Coin::create($request->all());
+        $source = Source::create($request->all());
         return response()->json([
             'code' => 200,
             'message' => 'OK',
-            'data' => $coin
+            'data' => $source
         ]);
     }
-
 }

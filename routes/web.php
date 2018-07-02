@@ -21,6 +21,6 @@ Route::get('/home', 'HomeController@index')->name('home');
 
 Route::get('/extract-data', 'DataController@extractPriceData' );
 Route::get('/date', 'DataController@findDate' );
-Route::get('/price', 'PriceController@getAveragePriceForEachCoin' );
+Route::get('/price', 'PriceController@fetchAndSaveDataPerChunk' );
 
 

@@ -16,7 +16,6 @@ class CreatePricesTable extends Migration
         Schema::create('prices', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('currency_pair_id')->unsigned();
-            $table->string('name');
             $table->bigInteger('openning_date_in_unix');
             $table->datetime('openning_date');
             $table->float('open',18,10)->nullable();
@@ -30,10 +29,10 @@ class CreatePricesTable extends Migration
             $table->datetime('closing_date');
             $table->float('average',30,10);
             
-            $table->index('name');
             $table->index('openning_date');
             $table->index('openning_date_in_unix');
             $table->foreign('currency_pair_id')->references('id')->on('currency_pair')->onDelete('cascade');
+            
         });
     }
 

@@ -18,7 +18,9 @@
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
             <file>file:/F:/Code/Laravel/Coin/app/Http/Controllers/PriceController.php</file>
+            <file>file:/F:/Code/Laravel/Coin/database/migrations/2018_06_26_130201_create_currency_pair_table.php</file>
             <file>file:/F:/Code/Laravel/Coin/app/Price.php</file>
+            <file>file:/F:/Code/Laravel/Coin/database/migrations/2018_06_27_085013_create_prices_table.php</file>
         </group>
     </open-files>
 </project-private>
