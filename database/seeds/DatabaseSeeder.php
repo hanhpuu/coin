@@ -20,13 +20,26 @@ class DatabaseSeeder extends Seeder
         ]
         ]);
          DB::table('currency_pair')->insert([
-        [   'base_currency_id' => 2,
+        [   'name' => 'BTCUSDT',
+            'base_currency_id' => 2,
             'quote_currency_id' => 1,
-            'name' => 'BTCUSDT'
+            'base_currency' => 'BTC',
+            'quote_currency' => 'USDT',
+            'priority' => 1
         ],
-        [   'base_currency_id' => 3,
+        [   'name' => 'ETHBTC',
+            'base_currency_id' => 3,
             'quote_currency_id' => 2,
-            'name' => 'BTCUSDT'
+            'base_currency' => 'ETH',
+            'quote_currency' => 'BTC',
+            'priority' => 2
+        ],
+        [   'name' => 'ETHUSDT',
+            'base_currency_id' => 3,
+            'quote_currency_id' => 1,
+            'base_currency' => 'ETH',
+            'quote_currency' => 'USDT',
+            'priority' => 1
         ]
         ]);
          

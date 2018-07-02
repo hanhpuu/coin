@@ -4,7 +4,6 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 use GuzzleHttp\Client;
-use DB;
 use App\CurrencyPair;
 
 class Price extends Model
@@ -18,18 +17,17 @@ class Price extends Model
         return $this->belongsTo('App\CurrencyPair');
     }
 
-    const LIMIT_API_CALL_PER_CHUNK = 3;
     const CORE_API_LINK = "https://www.binance.com/api/v1/klines?symbol=";
     const INTERVAL = "&interval=1h";
     const END_TIME = "&endTime=";
 
     /**
-     * To get average price from a number of URLs, loop til reach LIMIT_API_CALL_PER_CHUNK or no URL left .
+     * To get average price from a number of URLs, loop til reach limit  or no URL left .
      *
      * @param  string  $nameOfCurrencyPair
      * @return 
      */
-    public static function saveAveragePriceFromAPICall($base, $quote)
+    public static function saveAveragePriceFromAPICall($base, $quote, $limit)
     {
         $nameOfCurrencyPair = $base . $quote;
         $currency_pair = CurrencyPair::where('name', $nameOfCurrencyPair)->firstOrFail();
@@ -37,29 +35,32 @@ class Price extends Model
 
         $i = 0;
         do {
-            if ($quote !== 'USDT') {
-                $url = Price::saveAveragePriceWithoutQuoteUSDTFromCurrentURL($url, $currency_pair, $quote);
-            } else {
+            if ($quote == 'USDT') {
                 $url = Price::saveAveragePriceWithQuoteUSDTFromCurrentURL($url, $currency_pair);
+            } else {
+                $url = Price::saveAveragePriceWithoutQuoteUSDTFromCurrentURL($url, $currency_pair, $quote);
             }
             $i++;
-            if ($i == self::LIMIT_API_CALL_PER_CHUNK) {
+            if ($i == $limit) {
                 break;
             }
         } while ($url !== FALSE);
+
+        return $i;
     }
 
     /**
      * To get average price from the current URLs
      *
-     * @param  string  $nameOfCurrencyPair
      * @param  string  $url
+     * @param  string  $currency_pair
      * @return a new URL to continue the loop
      */
     public static function saveAveragePriceWithQuoteUSDTFromCurrentURL($url, $currency_pair)
     {
         $raw_data = self::getRawDataFromCurrentURL($url);
         if (count($raw_data) <= 1) {
+            CurrencyPair::where('id', $currency_pair->id)->update(['cron_past_completed' => 1]);
             return FALSE;
         }
 
@@ -96,23 +97,33 @@ class Price extends Model
     public static function saveAveragePriceWithoutQuoteUSDTFromCurrentURL($url, $currency_pair, $quote)
     {
         $raw_data = self::getRawDataFromCurrentURL($url);
+        if (count($raw_data) <= 1) {
+            CurrencyPair::where('id', $currency_pair->id)->update(['cron_past_completed' => 1]);
+            return FALSE;
+        }
+
         $currency_pair_in_USDT = $quote . 'USDT';
 
         foreach ($raw_data as $pricePerHour) {
             $openning_hour = date("Y-m-d H:i:s", substr($pricePerHour[0], 0, 10));
             $closing_hour = date("Y-m-d H:i:s", substr($pricePerHour[6], 0, 10));
-
-
             $currency_price = Price::where('name', '=', $currency_pair_in_USDT)
-                    ->where('openning_date_in_unix', '=', 1512154800000)
-                    ->orderBy('openning_date_in_unix', 'desc')
-                    ->firstOrFail();
+                    ->where('openning_date_in_unix', $pricePerHour[0])
+                    ->first();
+            if ($currency_price !== null) {
+                $open_USDT = $pricePerHour[1] * $currency_price->open;
+                $high_USDT = $pricePerHour[2] * $currency_price->average;
+                $low_USDT = $pricePerHour[3] * $currency_price->average;
+                $close_USDT = $pricePerHour[4] * $currency_price->close;
+                $average_price = ($high_USDT + $low_USDT) / 2;
+            } else {
+                $open_USDT = null;
+                $high_USDT = null;
+                $low_USDT = null;
+                $close_USDT = null;
+                $average_price = ($pricePerHour[2] + $pricePerHour[3]) / 2;
+            }
 
-            $open_USDT = $pricePerHour[1] * $currency_price->open;
-            $high_USDT = $pricePerHour[2] * $currency_price->average;
-            $low_USDT = $pricePerHour[3] * $currency_price->average;
-            $close_USDT = $pricePerHour[4] * $currency_price->close;
-            $average_price = ($high_USDT + $low_USDT) / 2;
             self::updateOrCreate(
                     [
                 'currency_pair_id' => $currency_pair->id,
@@ -132,10 +143,6 @@ class Price extends Model
                 'average' => $average_price,
                     ]
             );
-        }
-
-        if (count($raw_data) <= 1) {
-            return FALSE;
         }
 
         $new_url = self::CORE_API_LINK . $currency_pair->name . self::INTERVAL . self::END_TIME . $raw_data[0][0];

@@ -15,9 +15,14 @@ class CreateCurrencyPairTable extends Migration
     {
         Schema::create('currency_pair', function (Blueprint $table) {
             $table->increments('id');
+            $table->string('name')->unique();
             $table->integer('base_currency_id')->unsigned();
             $table->integer('quote_currency_id')->unsigned();
-            $table->string('name')->unique();
+            $table->string('base_currency');
+            $table->string('quote_currency');
+            $table->integer('priority');
+            $table->boolean('cron_past_completed')->default(FALSE);
+            $table->boolean('cron_present_completed')->default(FALSE);
             
             $table->foreign('base_currency_id')->references('id')->on('coins')->onDelete('cascade');
             $table->foreign('quote_currency_id')->references('id')->on('coins')->onDelete('cascade');

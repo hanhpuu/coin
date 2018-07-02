@@ -11,7 +11,7 @@ class CurrencyPair extends Model {
 
     public $table = 'currency_pair';
     public $timestamps = false;
-    protected $fillable = ['name'];
+    protected $fillable = ['name','priority'];
 
     public function prices() {
         return $this->hasMany('App\Price');
@@ -38,12 +38,19 @@ class CurrencyPair extends Model {
         $pair_name = $coins_in_pair['base_currency_name'] . $coins_in_pair['quote_currency_name'];
         $base_currency_id = Coin::where('name',$coins_in_pair['base_currency_name'])->firstOrFail()->id;
         $quote_currency_id = Coin::where('name',$coins_in_pair['quote_currency_name'])->firstOrFail()->id;
-        
+        if($quote_currency_id == 1) {
+            $priority = 1;
+        } else {
+            $priority = 2;
+        }
         DB::table('currency_pair')->insert(
                 [
+                    'name' => $pair_name,
                     'base_currency_id' => $base_currency_id,
                     'quote_currency_id' => $quote_currency_id,
-                    'name' => $pair_name,
+                    'base_currency' => $coins_in_pair['base_currency_name'],
+                    'quote_currency' => $coins_in_pair['quote_currency_name'],
+                    'priority' => $priority,
                 ]
         );
         return $pair_name;

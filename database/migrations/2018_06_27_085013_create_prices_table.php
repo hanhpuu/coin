@@ -19,15 +19,14 @@ class CreatePricesTable extends Migration
             $table->string('name');
             $table->bigInteger('openning_date_in_unix');
             $table->datetime('openning_date');
-            $table->float('open',18,10);
-            $table->float('high',18,10);
-            $table->float('low',18,10);
-            $table->float('close',18,10);
+            $table->float('open',18,10)->nullable();
+            $table->float('high',18,10)->nullable();
+            $table->float('low',18,10)->nullable();
+            $table->float('close',18,10)->nullable();
             $table->float('quote_open',18,10);
             $table->float('quote_high',18,10);
             $table->float('quote_low',18,10);
             $table->float('quote_close',18,10);
-            
             $table->datetime('closing_date');
             $table->float('average',30,10);
             

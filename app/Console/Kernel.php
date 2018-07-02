@@ -15,6 +15,7 @@ class Kernel extends ConsoleKernel
      */
     protected $commands = [
         \App\Console\Commands\SendEmails::class,
+        \App\Console\Commands\SaveDataInPast::class,
     ];
 
     /**
@@ -27,7 +28,8 @@ class Kernel extends ConsoleKernel
     {
 //        $schedule->command('email')->everyThirtyMinutes();
 //        $schedule->command(SendEmails::class)->everyThirtyMinutes();
-        
+
+        $schedule->command('saveDataInPast')->everyMinute();        
     }
 
     /**
