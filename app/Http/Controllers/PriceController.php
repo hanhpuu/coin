@@ -8,7 +8,8 @@ class PriceController extends Controller
 {
     public function fetchAndSaveDataPerChunk() 
 	{
-		Price::fetchAndSaveDataPerChunk();
+//		Price::fetchAndSaveAllDataInPast();
+		Price::fetchAndSaveAllDataInPresent();
 	}
 
 }

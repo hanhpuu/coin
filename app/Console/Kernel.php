@@ -4,7 +4,6 @@ namespace App\Console;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
-use App\Console\Commands\SendEmails;
 
 class Kernel extends ConsoleKernel
 {
@@ -16,6 +15,7 @@ class Kernel extends ConsoleKernel
     protected $commands = [
         \App\Console\Commands\SendEmails::class,
         \App\Console\Commands\SaveDataInPast::class,
+		\App\Console\Commands\SaveDataInPresent::class,
     ];
 
     /**
@@ -26,10 +26,8 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-//        $schedule->command('email')->everyThirtyMinutes();
-//        $schedule->command(SendEmails::class)->everyThirtyMinutes();
-
-        $schedule->command('saveDataInPast')->everyMinute();        
+//        $schedule->command('saveDataInPast')->everyMinute();        
+		$schedule->command('saveDataInPresent')->everyMinute();        
     }
 
     /**
