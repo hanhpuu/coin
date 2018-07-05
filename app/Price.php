@@ -27,9 +27,8 @@ class Price extends Model
 	{
 		$currencyPairs = CurrencyPair::where('cron_past_completed', 0)->orderBy('priority', 'asc')->get();
 		$remaining_call = self::LIMIT_API_CALL_PER_CHUNK;
-
 		foreach ($currencyPairs as $currency_pair) {
-			$number_api_called = Price::fetchAndSaveData($currency_pair, $remaining_call);
+			$number_api_called = Price::fetchAndSaveDataInPast($currency_pair, $remaining_call);
 			$remaining_call = $remaining_call - $number_api_called;
 			if ($remaining_call <= 0) {
 				return;
@@ -42,7 +41,10 @@ class Price extends Model
 		$currencyPairs = CurrencyPair::where('cron_present_completed', 0)->orderBy('priority', 'asc')->get();
 		$remaining_call = self::LIMIT_API_CALL_PER_CHUNK;
 		foreach ($currencyPairs as $currency_pair) {
-			$number_api_called = Price::fetchAndSaveDataInPresent($currency_pair, $remaining_call);
+			$number_api_called = Price::fetchAndSaveCurrencyPairDataInPresent($currency_pair, $remaining_call);
+			echo '<pre>';
+			print_r("coin {$currency_pair->id} chay het $number_api_called vong lap");
+			echo '</pre>';			
 			$remaining_call = $remaining_call - $number_api_called;
 			if ($remaining_call <= 0) {
 				return;
@@ -84,28 +86,38 @@ class Price extends Model
 		return $i;
 	}
 
-	public static function fetchAndSaveDataInPresent($currency_pair, $limit)
-	{
+	public static function fetchAndSaveCurrencyPairDataInPresent($currency_pair, $limit)
+	{	
 		$nameOfCurrencyPair = CurrencyPair::getPairName($currency_pair);
 		$url = self::CORE_API_LINK . $nameOfCurrencyPair . self::INTERVAL;
 		$i = 0;
-
+		
+		$max_openning_date = self::getCurrentcyPairMaxDate($currency_pair->id);
+		
 		do {
 			$i++;
-			$raw_data = self::getRawDataFromCurrentURL($url);
-
+			$raw_data = self::getRawDataFromCurrentURL($url,'asc');
+			echo '<pre>';
+			print_r('chuan bi chay url ' . $url);
+			echo '</pre>';
 			if ($currency_pair->quote_currency_id == self::ID_OF_USDT) {
-				$url = Price::savePriceWithUSDTInPresent($raw_data, $currency_pair, $nameOfCurrencyPair);
+				$url = Price::savePriceWithUSDTInPresent($raw_data, $currency_pair, $nameOfCurrencyPair, $max_openning_date);
 			} else {
-				$url = Price::savePriceWithoutUSDTInPresent($raw_data, $currency_pair, $nameOfCurrencyPair);
+				$url = Price::savePriceWithoutUSDTInPresent($raw_data, $currency_pair, $nameOfCurrencyPair, $max_openning_date);
 			}
-
+			
+			if(($url !== FALSE)) {
+				echo '<pre>';
+				print_r("currency {$currency_pair->id} da lay het data");
+				echo '</pre>';
+			}
 			if ($i == $limit) {
 				break;
 			}
+			
 		} while ($url !== FALSE);
 
-		return $i;
+		return $i;	
 	}
 
 	/**
@@ -195,12 +207,12 @@ class Price extends Model
 		return $new_url;
 	}
 
-	public static function savePriceWithUSDTInPresent($raw_data, $currency_pair, $nameOfCurrencyPair)
+	public static function savePriceWithUSDTInPresent($raw_data, $currency_pair, $nameOfCurrencyPair, $max_openning_date)
 	{
-		foreach ($raw_data as $pricePerHour) {
-			if (self::max('openning_date_in_unix') == $pricePerHour[0]) {
-				return FALSE;
-			} else {
+		
+
+		foreach ($raw_data as $i => $pricePerHour) {
+			if ( $max_openning_date <= $pricePerHour[0]) {
 				$openning_hour = date("Y-m-d H:i:s", substr($pricePerHour[0], 0, 10));
 				$closing_hour = date("Y-m-d H:i:s", substr($pricePerHour[6], 0, 10));
 				$average_price = ($pricePerHour[2] + $pricePerHour[3]) / 2;
@@ -223,6 +235,8 @@ class Price extends Model
 					'average' => $average_price,
 						]
 				);
+			} else {
+				return FALSE;
 			}
 		}
 
@@ -230,16 +244,21 @@ class Price extends Model
 
 		return $new_url;
 	}
-
-	public static function savePriceWithoutUSDTInPresent($raw_data, $currency_pair, $nameOfCurrencyPair)
+	
+	public static function getCurrentcyPairMaxDate($id)
+	{
+		$max_openning_date = self::where('currency_pair_id', $id)->max('openning_date_in_unix');
+		
+		return $max_openning_date;
+	}
+	
+	public static function savePriceWithoutUSDTInPresent($raw_data, $currency_pair, $nameOfCurrencyPair, $max_openning_date)
 	{
 		$id_of_currency_pair_in_USDT = CurrencyPair::where('base_currency_id', $currency_pair->quote_currency_id)
 						->where('quote_currency_id', self::ID_OF_USDT)->first()->id;
-
+		
 		foreach ($raw_data as $pricePerHour) {
-			if (self::max('openning_date_in_unix') == $pricePerHour[0]) {
-				return FALSE;
-			} else {
+			if ($max_openning_date <= $pricePerHour[0]) {
 				$openning_hour = date("Y-m-d H:i:s", substr($pricePerHour[0], 0, 10));
 				$closing_hour = date("Y-m-d H:i:s", substr($pricePerHour[6], 0, 10));
 				$average_price = ($pricePerHour[2] + $pricePerHour[3]) / 2;
@@ -268,6 +287,8 @@ class Price extends Model
 					'average' => $average_price,
 						]
 				);
+			} else {
+				return false;
 			}
 		}
 
@@ -282,12 +303,14 @@ class Price extends Model
 	 * @param  string  $url
 	 * @return array of all raw data
 	 */
-	public static function getRawDataFromCurrentURL($url)
+	public static function getRawDataFromCurrentURL($url, $sortDef = 'desc')
 	{
 		$client = new Client();
 		$respond = $client->request('GET', $url);
 		$raw_data = json_decode($respond->getBody());
-
+		if($sortDef == 'asc') {
+			krsort($raw_data);
+		} 
 		return $raw_data;
 	}
 

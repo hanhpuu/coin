@@ -19,6 +19,9 @@
         <group>
             <file>file:/F:/Code/Laravel/Coin/app/Console/Commands/SaveDataInPast.php</file>
             <file>file:/F:/Code/Laravel/Coin/app/Console/Kernel.php</file>
+            <file>file:/F:/Code/Laravel/Coin/app/Http/Controllers/PriceController.php</file>
+            <file>file:/F:/Code/Laravel/Coin/routes/web.php</file>
+            <file>file:/F:/Code/Laravel/Coin/app/Price.php</file>
         </group>
     </open-files>
 </project-private>
