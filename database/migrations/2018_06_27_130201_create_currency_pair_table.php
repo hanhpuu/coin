@@ -18,8 +18,7 @@ class CreateCurrencyPairTable extends Migration
             $table->integer('base_currency_id')->unsigned();
             $table->integer('quote_currency_id')->unsigned();
             $table->integer('priority');
-            $table->boolean('cron_past_completed')->default(FALSE);
-            $table->boolean('cron_present_completed')->default(FALSE);
+            $table->date('date_completed')->default('2010-01-01');
             $table->integer('source_id')->unsigned();
             
             $table->foreign('base_currency_id')->references('id')->on('coins')->onDelete('cascade');

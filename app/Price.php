@@ -25,10 +25,11 @@ class Price extends Model
 
 	public static function fetchAndSaveAllData()
 	{
-		$currency_pairs = CurrencyPair::where('cron_past_completed', 0)->orderBy('priority', 'asc')->get();
+		$today = date("Y-m-d");
+		$currency_pairs = CurrencyPair::whereDate('date_completed', '!=', $today)->orderBy('priority', 'asc')->get();
 		$remaining_call = self::LIMIT_API_CALL_PER_CHUNK;
 		foreach ($currency_pairs as $currency_pair) {
-			$number_api_called = Price::fetchAndSaveCurrencyPairData($currency_pair, $remaining_call);
+			$number_api_called = Price::fetchAndSaveCurrencyPairData($currency_pair, $remaining_call, $today);
 			$remaining_call = $remaining_call - $number_api_called;
 			if ($remaining_call <= 0) {
 				return;
@@ -42,7 +43,7 @@ class Price extends Model
 	 * @param  string  $nameOfCurrencyPair
 	 * @return integer $i number of api 
 	 */
-	public static function fetchAndSaveCurrencyPairData($currency_pair, $limit)
+	public static function fetchAndSaveCurrencyPairData($currency_pair, $limit, $today)
 	{
 		$nameOfCurrencyPair = CurrencyPair::getPairName($currency_pair);
 		$url = Price::getURL($nameOfCurrencyPair);
@@ -51,7 +52,7 @@ class Price extends Model
 			$i++;
 			$raw_data = self::getRawDataFromCurrentURL($url);
 			if (count($raw_data) <= 1) {
-				$currency_pair->cron_past_completed = 1;
+				$currency_pair->date_completed = $today;
 				$currency_pair->save();
 				break;
 			}
@@ -61,10 +62,10 @@ class Price extends Model
 			} else {
 				Price::savePriceWithoutUSDT($raw_data, $currency_pair);
 			}
-			if ($i == $limit && $currency_pair->cron_past_completed == 0) {
+			if ($i == $limit && $currency_pair->date_completed !== $today) {
 				$i--;
 			}
-			if ($i == $limit && $currency_pair->cron_past_completed == 1) {
+			if ($i == $limit && $currency_pair->date_completed == $$today) {
 				break;
 			}
 

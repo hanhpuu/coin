@@ -10,6 +10,7 @@ class PriceController extends Controller
 {
     public function fetchAndSaveDataPerChunk() 
 	{
+		
 		try {
 			Price::fetchAndSaveAllData();
 		} catch (\Exception $e) {
