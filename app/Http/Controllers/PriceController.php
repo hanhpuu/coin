@@ -22,7 +22,6 @@ class PriceController extends Controller
 	public function reset()
 	{
 		Price::query()->truncate();
-		CurrencyPair::where('cron_past_completed',1)->update(['cron_past_completed' => 0]);
 	}
 
 

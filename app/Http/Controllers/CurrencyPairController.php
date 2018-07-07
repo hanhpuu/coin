@@ -22,5 +22,22 @@ class CurrencyPairController extends Controller {
                     'message' => " You're the best ",
         ]);
     }
+	
+	public function checkPriceFluctuation(Request $request)
+	{
+		try {
+            $data = CurrencyPair::checkGainOfAllCurrencyCoin($request);
+        } catch (\Exception $e) {
+            return response()->json([
+                    'code' => $e->getCode(),
+                    'message' => $e->getMessage(),
+            ]);
+        }
+
+        return response()->json([
+                    'code' => 200,
+                    'message' => $data,
+        ]);
+	}
 
 }

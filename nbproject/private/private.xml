@@ -5,23 +5,23 @@
             <url>app/Http/Controllers/PriceController.php</url>
             <bookmark id="2">
                 <name/>
-                <line>7</line>
+                <line>9</line>
                 <key/>
             </bookmark>
             <bookmark id="1">
                 <name/>
-                <line>7</line>
+                <line>9</line>
                 <key/>
             </bookmark>
         </file>
     </editor-bookmarks>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/F:/Code/Laravel/Coin/app/Console/Commands/SaveDataInPast.php</file>
-            <file>file:/F:/Code/Laravel/Coin/app/Console/Kernel.php</file>
-            <file>file:/F:/Code/Laravel/Coin/app/Http/Controllers/PriceController.php</file>
-            <file>file:/F:/Code/Laravel/Coin/routes/web.php</file>
-            <file>file:/F:/Code/Laravel/Coin/app/Price.php</file>
+            <file>file:/F:/Code/Laravel/Coin/app/User.php</file>
+            <file>file:/F:/Code/Laravel/Coin/routes/api.php</file>
+            <file>file:/F:/Code/Laravel/Coin/app/Http/Middleware/VerifyJWTToken.php</file>
+            <file>file:/F:/Code/Laravel/Coin/app/Http/Controllers/UserController.php</file>
+            <file>file:/F:/Code/Laravel/Coin/app/Exceptions/Handler.php</file>
         </group>
     </open-files>
 </project-private>
