@@ -84,10 +84,10 @@ class CurrencyPair extends Model
 	public static function checkGainOfAllCurrencyCoin($request)
 	{
 		self::checkDataValidate($request);
-		$id = self::IsQuoteCurrencyUSDTorBTC($request->quote);
+		$ids = self::getPairByQuote($request->quote);
 		$max_price_array = self::fetchMaxPrice($request->begin, $request->end);
 		$open_price_array = self::fetchOpenPrice($request->begin);
-		$result = self::combinePriceArray($id, $max_price_array, $open_price_array);
+		$result = self::combinePriceArray($ids, $max_price_array, $open_price_array);
 		//	desc if 1, asc if 0	
 		if ($request->sort == 1) {
 			krsort($result);
@@ -153,14 +153,14 @@ class CurrencyPair extends Model
 		return $data2;
 	}
 
-	public static function IsQuoteCurrencyUSDTorBTC($quote)
+	public static function getPairByQuote($quote)
 	{
 		if ($quote == 'USDT') {
-			$id = self::where('quote_currency_id', SELF::ID_OF_USDT)->pluck('id')->toArray();
+			$ids = self::where('quote_currency_id', SELF::ID_OF_USDT)->pluck('id')->toArray();
 		} else {
-			$id = self::where('quote_currency_id', SELF::ID_OF_BTC)->pluck('id')->toArray();
+			$ids = self::where('quote_currency_id', SELF::ID_OF_BTC)->pluck('id')->toArray();
 		}
-		return $id;
+		return $ids;
 	}
 
 	public static function combinePriceArray($id, $data1, $data2)
