@@ -2,6 +2,7 @@
 
 namespace App;
 
+use Illuminate\Validation\Rule;
 use Illuminate\Database\Eloquent\Model;
 use Validator;
 use App\Coin;
@@ -69,6 +70,9 @@ class CurrencyPair extends Model
 		return $nameOfCurrencyPair;
 	}
 
+	CONST ID_OF_USDT = 1;
+	CONST ID_OF_BTC = 2;
+
 	/**
 	 * To see how much currency pairs gain during a time period
 	 *
@@ -79,46 +83,101 @@ class CurrencyPair extends Model
 	 */
 	public static function checkGainOfAllCurrencyCoin($request)
 	{
+		self::checkDataValidate($request);
+		$id = self::IsQuoteCurrencyUSDTorBTC($request->quote);
+		$max_price_array = self::fetchMaxPrice($request->begin, $request->end);
+		$open_price_array = self::fetchOpenPrice($request->begin);
+		$result = self::combinePriceArray($id, $max_price_array, $open_price_array);
+		//	desc if 1, asc if 0	
+		if ($request->sort == 1) {
+			krsort($result);
+		} else {
+			ksort($result);
+		}
+		return array_values($result);
+	}
+
+	public static function checkDataValidate($request)
+	{
 		$validator = Validator::make($request->all(), [
 					'begin' => 'required|date',
 					'end' => 'required|date|after:begin',
 					'sort' => 'required|boolean',
+					'quote' => [
+						'required',
+						Rule::in(['USDT', 'BTC']),
+					]
 		]);
-
 		if ($validator->fails()) {
 			$errors = $validator->errors();
 			throw new \Exception($errors->first(), 406);
 		}
+	}
 
-		$curreny_pairs = self::all();
-		$data = [];
-		foreach ($curreny_pairs as $curreny_pair) {
-			$id = $curreny_pair->id;
-			$price_at_begin = DB::table('prices')
-							->where('currency_pair_id', $id)
-							->whereDate('openning_date', $request->begin)->first()->open;
-			$max = DB::table('prices')
-							->where('currency_pair_id', $id)
-							->whereBetween('openning_date', [$request->begin, $request->end])->max('high');
-			$date_reach_max = DB::table('prices')
-							->where('currency_pair_id', $id)
-							->where('high', $max)->first()->openning_date;
-			$gain_in_percentage = ($max / $price_at_begin - 1) * 100;
-			$gain_index = $gain_in_percentage * 100000;
-			$data[$gain_index] = [
-				'pair_id' => $id,
-				'price at begin date' => $price_at_begin,
-				'highest price' => $max,
-				'date reach highest price' => $date_reach_max,
-				'gain in percentage' => $gain_in_percentage
-			];
+	public static function fetchMaxPrice($begin, $end)
+	{
+		$data1 = [];
+		$max_price_arrays = DB::SELECT("select prices.currency_pair_id, prices.high, prices.openning_date
+								FROM prices 
+								INNER JOIN (
+									SELECT currency_pair_id, MAX(high) high
+									FROM prices
+									WHERE prices.openning_date BETWEEN '$begin' AND '$end'
+									GROUP BY currency_pair_id
+								) new_table
+                                ON prices.currency_pair_id = new_table.currency_pair_id AND prices.high = new_table.high
+								");
+
+		foreach ($max_price_arrays as $max_price_array) {
+			$data1[$max_price_array->currency_pair_id] = (array) $max_price_array;
 		}
-		if($request->sort == 1) {
-			krsort($data);
+		return $data1;
+	}
+
+	public static function fetchOpenPrice($begin)
+	{
+		$data2 = [];
+		$open_price_arrays = DB::SELECT("select prices.currency_pair_id, prices.openning_date, prices.open
+								FROM prices
+								INNER JOIN (
+									SELECT currency_pair_id, MIN(openning_date) openning_date
+									FROM prices
+									WHERE prices.openning_date  >= '$begin' 
+									GROUP BY currency_pair_id
+								) new_table
+								ON prices.currency_pair_id = new_table.currency_pair_id AND prices.openning_date = new_table.openning_date
+								");
+		foreach ($open_price_arrays as $open_price_array) {
+			$data2[$open_price_array->currency_pair_id] = (array) $open_price_array;
+		}
+		return $data2;
+	}
+
+	public static function IsQuoteCurrencyUSDTorBTC($quote)
+	{
+		if ($quote == 'USDT') {
+			$id = self::where('quote_currency_id', SELF::ID_OF_USDT)->pluck('id')->toArray();
 		} else {
-			ksort($data);
+			$id = self::where('quote_currency_id', SELF::ID_OF_BTC)->pluck('id')->toArray();
 		}
-		return array_values($data);
+		return $id;
+	}
+
+	public static function combinePriceArray($id, $data1, $data2)
+	{
+		$result = array();
+		foreach ($id as $currency_pair_id) {
+		// if data of this $currency_pair_id exists in both 2 arrays		
+			if ($data1[$currency_pair_id] && $data2[$currency_pair_id]) {
+				$gain_in_percentage = ($data1[$currency_pair_id]['high'] / $data2[$currency_pair_id]['open'] - 1) * 100;
+				$gain_index = $gain_in_percentage * 1000000;
+				$result[$gain_index] = array_merge($data1[$currency_pair_id], $data2[$currency_pair_id]);
+				$result[$gain_index]['gain_in_percentage'] = $gain_in_percentage;
+			} else {
+				$result[$currency_pair_id] = [];
+			}
+		}
+		return $result;
 	}
 
 }
