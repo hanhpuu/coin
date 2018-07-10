@@ -31,7 +31,7 @@ class UserController extends Controller
 		if ($validator->fails()) {
 			return response()->json([
 						'code' => 406,
-						'message' => 'Please enter validate data!'
+						'message' => $validator->errors()
 			]);
 		}
 

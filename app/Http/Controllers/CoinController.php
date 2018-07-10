@@ -17,7 +17,7 @@ class CoinController extends Controller {
         if ($validator->fails()) {
             return response()->json([
                 'code' => 406,
-                'message' => 'Coin already exists!'
+                'message' => $validator->errors(),
             ]);
         }
 

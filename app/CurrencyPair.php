@@ -99,7 +99,7 @@ class CurrencyPair extends Model
 	public static function checkDataValidate($request)
 	{
 		$validator = Validator::make($request->all(), [
-					'begin' => 'required|date',
+					'begin' => 'required|date|before:tomorrow',
 					'end' => 'required|date|after:begin',
 					'sort' => 'required|boolean',
 					'quote' => [
