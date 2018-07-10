@@ -85,14 +85,13 @@ class CurrencyPair extends Model
 	{
 		self::checkDataValidate($request);
 		$ids = self::getPairByQuote($request->quote);
+		$pair_name_array = self::fetchPairName();
 		$max_price_array = self::fetchMaxPrice($request->begin, $request->end);
 		$open_price_array = self::fetchOpenPrice($request->begin);
-		$result = self::combinePriceArray($ids, $max_price_array, $open_price_array);
+		$result = self::combinePriceArray($ids, $max_price_array, $open_price_array, $pair_name_array);
 		//	desc if 1, asc if 0	
 		if ($request->sort == 1) {
 			krsort($result);
-		} else {
-			ksort($result);
 		}
 		return array_values($result);
 	}
@@ -115,7 +114,7 @@ class CurrencyPair extends Model
 
 	public static function fetchMaxPrice($begin, $end)
 	{
-		$data1 = [];
+		$max_array = [];
 		$max_price_arrays = DB::SELECT("select prices.currency_pair_id, prices.high, prices.openning_date
 								FROM prices 
 								INNER JOIN (
@@ -128,14 +127,14 @@ class CurrencyPair extends Model
 								");
 
 		foreach ($max_price_arrays as $max_price_array) {
-			$data1[$max_price_array->currency_pair_id] = (array) $max_price_array;
+			$max_array[$max_price_array->currency_pair_id] = (array) $max_price_array;
 		}
-		return $data1;
+		return $max_array;
 	}
 
 	public static function fetchOpenPrice($begin)
 	{
-		$data2 = [];
+		$open_array = [];
 		$open_price_arrays = DB::SELECT("select prices.currency_pair_id, prices.openning_date, prices.open
 								FROM prices
 								INNER JOIN (
@@ -147,46 +146,53 @@ class CurrencyPair extends Model
 								ON prices.currency_pair_id = new_table.currency_pair_id AND prices.openning_date = new_table.openning_date
 								");
 		foreach ($open_price_arrays as $open_price_array) {
-			$data2[$open_price_array->currency_pair_id] = (array) $open_price_array;
+			$open_array[$open_price_array->currency_pair_id] = (array) $open_price_array;
 		}
-		return $data2;
+		return $open_array;
 	}
 
 	public static function getPairByQuote($quote)
 	{
 		if ($quote == 'USDT') {
-<<<<<<< HEAD
-			$id = self::where('quote_currency_id', SELF::ID_OF_USDT)->pluck('id')->toArray();
-		} else if($quote == 'BTC') {
-			$id = self::where('quote_currency_id', SELF::ID_OF_BTC)->pluck('id')->toArray();
-		} else {
-			$id = self::all()->pluck('id')->toArray();
-		}
-		
-		return $id;
-=======
 			$ids = self::where('quote_currency_id', SELF::ID_OF_USDT)->pluck('id')->toArray();
-		} else {
+		} else if ($quote == 'BTC') {
 			$ids = self::where('quote_currency_id', SELF::ID_OF_BTC)->pluck('id')->toArray();
+		} else {
+			$ids = self::all()->pluck('id')->toArray();
 		}
 		return $ids;
->>>>>>> 70c72e5f250a2050cf2ca4335e96d871f8880cce
 	}
 
-	public static function combinePriceArray($id, $data1, $data2)
+	public static function fetchPairName()
+	{
+		$pair_name_arrays = DB::table('currency_pair')
+					->join('coins as c1', 'currency_pair.base_currency_id' , '=', 'c1.id')
+					->join('coins as c2', 'currency_pair.quote_currency_id' , '=', 'c2.id')
+					->select('currency_pair.id', 'c1.name as base_name', 'c2.name as quote_name')
+					->get();
+		$name_array = [];
+		foreach($pair_name_arrays as $pair_name_array) {
+			$name_array[$pair_name_array->id] = (array)$pair_name_array;
+		}
+		return $name_array;
+	}
+
+	public static function combinePriceArray($ids, $max_array, $open_array, $name_array)
 	{
 		$result = array();
-		foreach ($id as $currency_pair_id) {
-		// if data of this $currency_pair_id exists in both 2 arrays		
-			if ($data1[$currency_pair_id] && $data2[$currency_pair_id]) {
-				$gain_in_percentage = ($data1[$currency_pair_id]['high'] / $data2[$currency_pair_id]['open'] - 1) * 100;
-				$gain_index = $gain_in_percentage * 1000000;
-				$result[$gain_index] = array_merge($data1[$currency_pair_id], $data2[$currency_pair_id]);
-				$result[$gain_index]['gain_in_percentage'] = $gain_in_percentage;
+		foreach ($ids as $currency_pair_id) {
+			// if data of this $currency_pair_id exists in both 2 arrays		
+			if ($max_array[$currency_pair_id] && $open_array[$currency_pair_id] && $name_array[$currency_pair_id]) {
+				$gain_in_percentage = ($max_array[$currency_pair_id]['high'] / $open_array[$currency_pair_id]['open'] - 1) * 100;
+				$result[$currency_pair_id] = array_merge($name_array[$currency_pair_id],$max_array[$currency_pair_id], $open_array[$currency_pair_id]);
+				$result[$currency_pair_id]['gain_in_percentage'] = $gain_in_percentage;
 			} else {
 				$result[$currency_pair_id] = [];
 			}
 		}
+		usort($result, function($a, $b) {
+			return $a['gain_in_percentage'] <=> $b['gain_in_percentage'];
+		});
 		return $result;
 	}
 
