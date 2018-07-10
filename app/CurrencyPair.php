@@ -104,7 +104,6 @@ class CurrencyPair extends Model
 					'end' => 'required|date|after:begin',
 					'sort' => 'required|boolean',
 					'quote' => [
-						'required',
 						Rule::in(['USDT', 'BTC']),
 					]
 		]);
@@ -157,9 +156,12 @@ class CurrencyPair extends Model
 	{
 		if ($quote == 'USDT') {
 			$id = self::where('quote_currency_id', SELF::ID_OF_USDT)->pluck('id')->toArray();
-		} else {
+		} else if($quote == 'BTC') {
 			$id = self::where('quote_currency_id', SELF::ID_OF_BTC)->pluck('id')->toArray();
+		} else {
+			$id = self::all()->pluck('id')->toArray();
 		}
+		
 		return $id;
 	}
 
