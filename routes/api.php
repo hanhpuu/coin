@@ -29,6 +29,8 @@ Route::group(['middleware' => 'jwt.auth'], function () {
 	Route::post('coin/add','CoinController@addCoinName');
 	Route::post('pair/add','CurrencyPairController@addPairName');
 	
+	Route::post('coin/distinct/add','DistinctPairController@addDistinctPairs');
 	
 	Route::get('price/fluctuation','CurrencyPairController@checkPriceFluctuation');
 });
+

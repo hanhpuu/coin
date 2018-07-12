@@ -43,7 +43,7 @@ class CurrencyPair extends Model
 		$quote = Coin::find($coins_in_pair['quote_id']);
 		$source = Source::find($coins_in_pair['source_id']);
 		if (!$base OR ! $quote OR ! $source) {
-			$error = 'Please enter existed coins';
+			$error = $validator->errors();
 			throw new \Exception($error, 406);
 		}
 		//insert currency pair into table
@@ -64,8 +64,8 @@ class CurrencyPair extends Model
 
 	public static function getPairName($currency_pair)
 	{
-		$base = Coin::where('id', $currency_pair->base_currency_id)->first();
-		$quote = Coin::where('id', $currency_pair->quote_currency_id)->first();
+		$base = Coin::where('id', $currency_pair->base_id)->first();
+		$quote = Coin::where('id', $currency_pair->quote_id)->first();
 		$nameOfCurrencyPair = $base->name . $quote->name;
 		return $nameOfCurrencyPair;
 	}
@@ -154,9 +154,9 @@ class CurrencyPair extends Model
 	public static function getPairByQuote($quote)
 	{
 		if ($quote == 'USDT') {
-			$ids = self::where('quote_currency_id', SELF::ID_OF_USDT)->pluck('id')->toArray();
+			$ids = self::where('quote_id', SELF::ID_OF_USDT)->pluck('id')->toArray();
 		} else if ($quote == 'BTC') {
-			$ids = self::where('quote_currency_id', SELF::ID_OF_BTC)->pluck('id')->toArray();
+			$ids = self::where('quote_id', SELF::ID_OF_BTC)->pluck('id')->toArray();
 		} else {
 			$ids = self::all()->pluck('id')->toArray();
 		}
@@ -166,8 +166,8 @@ class CurrencyPair extends Model
 	public static function fetchPairName()
 	{
 		$pair_name_arrays = DB::table('currency_pair')
-					->join('coins as c1', 'currency_pair.base_currency_id' , '=', 'c1.id')
-					->join('coins as c2', 'currency_pair.quote_currency_id' , '=', 'c2.id')
+					->join('coins as c1', 'currency_pair.base_id' , '=', 'c1.id')
+					->join('coins as c2', 'currency_pair.quote_id' , '=', 'c2.id')
 					->select('currency_pair.id', 'c1.name as base_name', 'c2.name as quote_name')
 					->get();
 		$name_array = [];

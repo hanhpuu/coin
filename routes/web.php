@@ -19,7 +19,9 @@ Auth::routes();
 
 Route::get('/home', 'HomeController@index')->name('home');
 
-Route::get('/price/save', 'PriceController@fetchAndSaveDataPerChunk' );
+Route::get('/price/past', 'PriceController@fetchAndSaveDataInPast' );
 Route::get('/price/reset', 'PriceController@reset' );
+Route::get('/price/present', 'PriceController@fetchAndSaveAllDataInPresent' );
+Route::get('/price/distinct/present', 'DistinctPriceController@fetchAndSaveDataInPresent' );
 
 

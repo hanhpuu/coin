@@ -13,9 +13,7 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
-        \App\Console\Commands\SendEmails::class,
-        \App\Console\Commands\SaveDataInPast::class,
-		\App\Console\Commands\SaveDataInPresent::class,
+		\App\Console\Commands\SaveDataInPresentEveryFifteen::class,
     ];
 
     /**
@@ -25,9 +23,8 @@ class Kernel extends ConsoleKernel
      * @return void
      */
     protected function schedule(Schedule $schedule)
-    {
-//        $schedule->command('saveDataInPast')->everyMinute();        
-		$schedule->command('saveDataInPresent')->everyMinute();        
+    {      
+		$schedule->command('SaveDataInPresentEveryFifteen')->everyFiveMinutes();        
     }
 
     /**

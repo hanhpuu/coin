@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateCurrencyPairTable extends Migration
+class CreateDistinctPairsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,13 +13,14 @@ class CreateCurrencyPairTable extends Migration
      */
     public function up()
     {
-        Schema::create('currency_pair', function (Blueprint $table) {
+        Schema::create('distinct_pairs', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('base_id')->unsigned();
             $table->integer('quote_id')->unsigned();
             $table->integer('priority');
-            $table->date('date_completed')->default('2010-01-01 00:00:00');
-            $table->integer('source_id')->unsigned();
+			$table->integer('distinct_price');
+            $table->datetime('date_completed')->default('2010-01-01 00:00:00');
+            $table->integer('source_id')->unsigned()->default('1');
             
             $table->foreign('base_id')->references('id')->on('coins')->onDelete('cascade');
             $table->foreign('quote_id')->references('id')->on('coins')->onDelete('cascade');
@@ -35,12 +36,12 @@ class CreateCurrencyPairTable extends Migration
      */
     public function down()
     {
-        Schema::table('currency_pair', function(Blueprint $table) {
-	    $table->dropforeign('currency_pair_base_id_foreign');
-            $table->dropforeign('currency_pair_quote_id_foreign');
-            $table->dropforeign('currency_pair_source_id_foreign');
+        Schema::table('distinct_pairs', function(Blueprint $table) {
+	    $table->dropforeign('distinct_pair_base_id_foreign');
+            $table->dropforeign('distinct_pair_quote_id_foreign');
+            $table->dropforeign('distinct_pair_source_id_foreign');
 	});
-        Schema::dropIfExists('currency_pair');
+        Schema::dropIfExists('distinct_pairs');
         
     }
 }
