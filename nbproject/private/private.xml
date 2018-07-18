@@ -3,10 +3,9 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/F:/Code/Laravel/Coin/app/CurrencyPair.php</file>
+            <file>file:/F:/Code/Laravel/Coin/resources/views/frontend/distinct_pair/create.blade.php</file>
             <file>file:/F:/Code/Laravel/Coin/app/DistinctPair.php</file>
-            <file>file:/F:/Code/Laravel/Coin/app/DistinctPrice.php</file>
-            <file>file:/F:/Code/Laravel/Coin/app/Http/Controllers/DistinctPriceController.php</file>
+            <file>file:/F:/Code/Laravel/Coin/app/Http/Controllers/DistinctPairController.php</file>
         </group>
     </open-files>
 </project-private>

@@ -3,7 +3,7 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Http\Request;
+use Validator;
 
 class Coin extends Model
 {
@@ -21,4 +21,11 @@ class Coin extends Model
         return $this->hasMany('App\CurrencyPair');
     }
     
+		public static function checkCoinValidation($request)
+	{
+		$validator = Validator::make($request->all(), [
+					'name' => 'required|unique:coins|max:5',
+		]);
+		return $validator;
+	}
 }

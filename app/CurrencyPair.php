@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 use Validator;
 use App\Coin;
 use DB;
-use App\Source;
 
 class CurrencyPair extends Model
 {
@@ -28,24 +27,17 @@ class CurrencyPair extends Model
 
 	public static function addPairByAPI($request)
 	{
-		$validator = Validator::make($request->all(), [
-					'base_id' => 'required|numeric|max:5',
-					'quote_id' => 'required|numeric|max:5',
-					'source_id' => 'require|max:25',
-		]);
-
+		$validator = self::checkCurrencyPairValidation($request);
 		if ($validator->fails()) {
-			$error = 'Please enter correct coins data';
+			$error = $validator->errors()->first();
 			throw new \Exception($error, 406);
 		}
+		self::insertNewCurrencyPair($request);
+	}
+	
+	public static function insertNewCurrencyPair($request)
+	{
 		$coins_in_pair = $request->all();
-		$base = Coin::find($coins_in_pair['base_id']);
-		$quote = Coin::find($coins_in_pair['quote_id']);
-		$source = Source::find($coins_in_pair['source_id']);
-		if (!$base OR ! $quote OR ! $source) {
-			$error = $validator->errors();
-			throw new \Exception($error, 406);
-		}
 		//insert currency pair into table
 		if ($coins_in_pair['quote_id'] == 1) {
 			$priority = 1;
@@ -60,6 +52,24 @@ class CurrencyPair extends Model
 					'source_id' => $coins_in_pair['source_id'],
 				]
 		);
+	}
+
+	public static function checkCurrencyPairValidation($request)
+	{
+		$validator = Validator::make($request->all(), [
+					'base_id' => 'required|numeric|exists:coins,id',
+					'quote_id' => 'required|numeric|exists:coins,id',
+					'source_id' => [
+						'required',
+						'numeric',
+						'exists:sources,id',
+						Rule::unique('currency_pair')->where(function ($query) use($request) {
+								$query->where('base_id', $request->base_id)->where('quote_id', $request->quote_id);
+							}),
+					],
+		]);
+
+		return $validator;
 	}
 
 	public static function getPairName($currency_pair)
@@ -166,13 +176,13 @@ class CurrencyPair extends Model
 	public static function fetchPairName()
 	{
 		$pair_name_arrays = DB::table('currency_pair')
-					->join('coins as c1', 'currency_pair.base_id' , '=', 'c1.id')
-					->join('coins as c2', 'currency_pair.quote_id' , '=', 'c2.id')
-					->select('currency_pair.id', 'c1.name as base_name', 'c2.name as quote_name')
-					->get();
+				->join('coins as c1', 'currency_pair.base_id', '=', 'c1.id')
+				->join('coins as c2', 'currency_pair.quote_id', '=', 'c2.id')
+				->select('currency_pair.id', 'c1.name as base_name', 'c2.name as quote_name')
+				->get();
 		$name_array = [];
-		foreach($pair_name_arrays as $pair_name_array) {
-			$name_array[$pair_name_array->id] = (array)$pair_name_array;
+		foreach ($pair_name_arrays as $pair_name_array) {
+			$name_array[$pair_name_array->id] = (array) $pair_name_array;
 		}
 		return $name_array;
 	}
@@ -184,7 +194,7 @@ class CurrencyPair extends Model
 			// if data of this $currency_pair_id exists in both 2 arrays		
 			if ($max_array[$currency_pair_id] && $open_array[$currency_pair_id] && $name_array[$currency_pair_id]) {
 				$gain_in_percentage = ($max_array[$currency_pair_id]['high'] / $open_array[$currency_pair_id]['open'] - 1) * 100;
-				$result[$currency_pair_id] = array_merge($name_array[$currency_pair_id],$max_array[$currency_pair_id], $open_array[$currency_pair_id]);
+				$result[$currency_pair_id] = array_merge($name_array[$currency_pair_id], $max_array[$currency_pair_id], $open_array[$currency_pair_id]);
 				$result[$currency_pair_id]['gain_in_percentage'] = $gain_in_percentage;
 			} else {
 				$result[$currency_pair_id] = [];
@@ -196,4 +206,6 @@ class CurrencyPair extends Model
 		return $result;
 	}
 
+	
+	
 }

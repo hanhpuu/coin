@@ -3,16 +3,16 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\DistinctPrice;
+use App\Price;
 
-class SaveDataInPresentEveryFifteen extends Command
+class fetchAndSaveCurrencyPairData extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'SaveDataInPresentEveryFifteen';
+    protected $signature = 'fetchAndSaveCurrencyPairData';
 
     /**
      * The console command description.
@@ -38,6 +38,6 @@ class SaveDataInPresentEveryFifteen extends Command
      */
     public function handle()
     {
-        DistinctPrice::fetchAndSaveDataInPresent();   
+        Price::fetchAndSaveCurrencyPairData();   
     }
 }

@@ -18,9 +18,11 @@ class CreateDistinctPairsTable extends Migration
             $table->integer('base_id')->unsigned();
             $table->integer('quote_id')->unsigned();
             $table->integer('priority');
-			$table->integer('distinct_price');
+			$table->float('initial_price',18,10);
+			$table->float('latest_price',18,10);
             $table->datetime('date_completed')->default('2010-01-01 00:00:00');
-            $table->integer('source_id')->unsigned()->default('1');
+            $table->integer('source_id')->unsigned();
+			$table->integer('potential_group_id')->unsigned();
             
             $table->foreign('base_id')->references('id')->on('coins')->onDelete('cascade');
             $table->foreign('quote_id')->references('id')->on('coins')->onDelete('cascade');

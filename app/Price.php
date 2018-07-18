@@ -25,6 +25,7 @@ class Price extends Model
 
 	public static function fetchAndSaveAllData()
 	{
+		date_default_timezone_set('Asia/Bangkok');
 		$today = date("Y-m-d");
 		$currency_pairs = CurrencyPair::whereDate('date_completed', '!=', $today)->orderBy('priority', 'asc')->get();
 		$remaining_call = self::LIMIT_API_CALL_PER_CHUNK;
@@ -36,21 +37,6 @@ class Price extends Model
 			}
 		}
 	}
-
-	public static function fetchAndSaveDataInPresent()
-	{
-		$today = date("Y-m-d");
-		$currency_pairs = CurrencyPair::whereDate('date_completed', '!=', $today)->orderBy('priority', 'asc')->get();
-		$remaining_call = self::LIMIT_API_CALL_PER_CHUNK;
-		foreach ($currency_pairs as $currency_pair) {
-			$number_api_called = Price::fetchAndSaveCurrencyPairDataInPresent($currency_pair, $remaining_call, $today);
-			$remaining_call = $remaining_call - $number_api_called;
-			if ($remaining_call <= 0) {
-				return;
-			}
-		}
-	}
-
 	/**
 	 * To get price of a currency pair, loop til reach limit and get all data of currently loop one .
 	 *
@@ -71,7 +57,7 @@ class Price extends Model
 				break;
 			}
 
-			if ($currency_pair->quote_currency_id == self::ID_OF_USDT) {
+			if ($currency_pair->quote_id == self::ID_OF_USDT) {
 				Price::savePriceWithUSDT($raw_data, $currency_pair);
 			} else {
 				Price::savePriceWithoutUSDT($raw_data, $currency_pair);
@@ -87,111 +73,6 @@ class Price extends Model
 		} while (1);
 
 		return $i;
-	}
-
-	public static function fetchAndSaveCurrencyPairDataInPresent($currency_pair, $limit, $today)
-	{
-		$nameOfCurrencyPair = CurrencyPair::getPairName($currency_pair);
-		$url = Price::getURL($nameOfCurrencyPair);
-		$max = Price::where('currency_pair_id', $currency_pair->id)->max('openning_date_in_unix');
-		$i = 0;
-		do {
-			$i++;
-			$raw_data = self::getRawDataFromCurrentURL($url);
-			if ($currency_pair->quote_currency_id == self::ID_OF_USDT) {
-				Price::savePriceWithUSDTInPresent($raw_data, $currency_pair, $max, $today);
-			} else {
-				Price::savePriceWithoutUSDTInPresent($raw_data, $currency_pair, $max, $today);
-			}
-			$currency_pair->date_completed = $today;
-			$currency_pair->save();
-
-			if ($i == $limit && $currency_pair->date_completed !== $today) {
-				$i--;
-			}
-			if ($i == $limit && $currency_pair->date_completed == $today) {
-				break;
-			}
-
-			$url = self::CORE_API_LINK . $nameOfCurrencyPair . self::INTERVAL . self::END_TIME . $raw_data[0][0];
-		} while ($currency_pair->date_completed != $today);
-
-		return $i;
-	}
-
-	public static function savePriceWithUSDTInPresent($raw_data, $currency_pair, $max, $today)
-	{
-		$i = count($raw_data) - 1;
-		while ($raw_data[$i][0] > $max) {
-			$i--;
-			$openning_hour = date("Y-m-d H:i:s", substr($raw_data[$i][0], 0, 10));
-			$closing_hour = date("Y-m-d H:i:s", substr($raw_data[$i][6], 0, 10));
-			$average_price = ($raw_data[$i][2] + $raw_data[$i][3]) / 2;
-			self::updateOrCreate(
-					[
-				'currency_pair_id' => $currency_pair->id,
-				'openning_date_in_unix' => $raw_data[$i][0],
-				'openning_date' => $openning_hour
-					], [
-				'open' => $raw_data[$i][1],
-				'high' => $raw_data[$i][2],
-				'low' => $raw_data[$i][3],
-				'close' => $raw_data[$i][4],
-				'quote_open' => $raw_data[$i][1],
-				'quote_high' => $raw_data[$i][2],
-				'quote_low' => $raw_data[$i][3],
-				'quote_close' => $raw_data[$i][4],
-				'closing_date' => $closing_hour,
-				'average' => $average_price,
-					]
-			);
-		}
-	}
-
-	public static function savePriceWithoutUSDTInPresent($raw_data, $currency_pair, $max, $today)
-	{
-		$id_of_currency_pair_in_USDT = CurrencyPair::where('base_currency_id', $currency_pair->quote_currency_id)
-						->where('quote_currency_id', self::ID_OF_USDT)->first()->id;
-		$i = count($raw_data) - 1;
-		while ($raw_data[$i][0] > $max) {
-			$i--;
-			$openning_hour = date("Y-m-d H:i:s", substr($raw_data[$i][0], 0, 10));
-			$closing_hour = date("Y-m-d H:i:s", substr($raw_data[$i][6], 0, 10));
-			$currency_pair_in_USDT = Price::where('currency_pair_id', $id_of_currency_pair_in_USDT)
-					->where('openning_date_in_unix', $raw_data[$i][0])
-					->first();
-			if ($currency_pair_in_USDT !== null) {
-				$open_USDT = $raw_data[$i][1] * $currency_pair_in_USDT->open;
-				$high_USDT = $raw_data[$i][2] * $currency_pair_in_USDT->average;
-				$low_USDT = $raw_data[$i][3] * $currency_pair_in_USDT->average;
-				$close_USDT = $raw_data[$i][4] * $currency_pair_in_USDT->close;
-				$average_price = ($high_USDT + $low_USDT) / 2;
-			} else {
-				$open_USDT = null;
-				$high_USDT = null;
-				$low_USDT = null;
-				$close_USDT = null;
-				$average_price = ($raw_data[$i][2] + $raw_data[$i][3]) / 2;
-			}
-
-			self::updateOrCreate([
-				'currency_pair_id' => $currency_pair->id,
-				'openning_date_in_unix' => $raw_data[$i][0],
-				'openning_date' => $openning_hour
-					], [
-				'open' => $open_USDT,
-				'high' => $high_USDT,
-				'low' => $low_USDT,
-				'close' => $close_USDT,
-				'quote_open' => $raw_data[$i][1],
-				'quote_high' => $raw_data[$i][2],
-				'quote_low' => $raw_data[$i][3],
-				'quote_close' => $raw_data[$i][4],
-				'closing_date' => $closing_hour,
-				'average' => $average_price,
-					]
-			);
-		}
 	}
 
 	/**
@@ -235,8 +116,8 @@ class Price extends Model
 	 */
 	public static function savePriceWithoutUSDT($raw_data, $currency_pair)
 	{
-		$id_of_currency_pair_in_USDT = CurrencyPair::where('base_currency_id', $currency_pair->quote_currency_id)
-						->where('quote_currency_id', self::ID_OF_USDT)->first()->id;
+		$id_of_currency_pair_in_USDT = CurrencyPair::where('base_id', $currency_pair->quote_id)
+						->where('quote_id', self::ID_OF_USDT)->first()->id;
 
 		foreach ($raw_data as $pricePerHour) {
 			$openning_hour = date("Y-m-d H:i:s", substr($pricePerHour[0], 0, 10));

@@ -1,0 +1,26 @@
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/* 
+    Created on : Jul 18, 2018, 10:36:25 AM
+    Author     : HanhPuu
+*/
+
+.box-inside-form {
+    width: 95% !important;
+    margin: 20px !important;
+}
+
+.center-header {
+    margin: 20px !important;
+}
+
+.center-header h1 {
+    text-align: center !important;
+}
+
+.center-header h2 {
+    text-align: center !important;
+}
