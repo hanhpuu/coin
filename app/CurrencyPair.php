@@ -93,16 +93,16 @@ class CurrencyPair extends Model
 	 */
 	public static function checkGainOfAllCurrencyCoin($request)
 	{
-		self::checkDataValidate($request);
+		$validator = self::checkDataValidate($request);
+		if ($validator->fails()) {
+			$errors = $validator->errors();
+			throw new \Exception($errors->first(), 406);
+		}
 		$ids = self::getPairByQuote($request->quote);
 		$pair_name_array = self::fetchPairName();
 		$max_price_array = self::fetchMaxPrice($request->begin, $request->end);
 		$open_price_array = self::fetchOpenPrice($request->begin);
 		$result = self::combinePriceArray($ids, $max_price_array, $open_price_array, $pair_name_array);
-		//	desc if 1, asc if 0	
-		if ($request->sort == 1) {
-			krsort($result);
-		}
 		return array_values($result);
 	}
 
@@ -111,15 +111,12 @@ class CurrencyPair extends Model
 		$validator = Validator::make($request->all(), [
 					'begin' => 'required|date|before:tomorrow',
 					'end' => 'required|date|after:begin',
-					'sort' => 'required|boolean',
+					'sort' => 'boolean',
 					'quote' => [
-						Rule::in(['USDT', 'BTC']),
+						Rule::in(['USDT', 'BTC', 'Both']),
 					]
 		]);
-		if ($validator->fails()) {
-			$errors = $validator->errors();
-			throw new \Exception($errors->first(), 406);
-		}
+		return $validator;
 	}
 
 	public static function fetchMaxPrice($begin, $end)

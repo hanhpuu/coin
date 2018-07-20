@@ -40,6 +40,15 @@
 				<li><a href="/potential_group">View a potential group</a></li>
 			</ul>
 		</li>
+		<li class="dropdown">
+			<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+				Time <span class="caret"></span>
+			</a>
+			<ul class="dropdown-menu" role="menu">
+				<li><a href="/time">Enter time</a></li>
+			</ul>
+
+		</li>
 	</ul>
 	@endif
 

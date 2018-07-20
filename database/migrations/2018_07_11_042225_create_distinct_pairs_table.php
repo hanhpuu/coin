@@ -20,6 +20,7 @@ class CreateDistinctPairsTable extends Migration
             $table->integer('priority');
 			$table->float('initial_price',18,10);
 			$table->float('latest_price',18,10);
+			$table->float('target_price',18,10);
             $table->datetime('date_completed')->default('2010-01-01 00:00:00');
             $table->integer('source_id')->unsigned();
 			$table->integer('potential_group_id')->unsigned();

@@ -191,6 +191,14 @@ class Price extends Model
 			}
 		}
 	}
+	
+	public static function getLatestPriceOfACoin($url) 
+	{
+		$client = new Client();
+			$respond = $client->request('GET', $url);
+			$raw_data = json_decode($respond->getBody());
+			return $raw_data;
+	}
 
 	public static function getURL($nameOfCurrencyPair)
 	{

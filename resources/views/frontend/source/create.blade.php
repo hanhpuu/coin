@@ -9,7 +9,7 @@
 	<input name="_token" type="hidden" value="{{ csrf_token() }}"/>
 
 	<label for="name">Name:</label>
-	<input type="text" name="name" id="name" class="form-control box-inside-form" />
+	<input type="text" name="name" id="name" class="form-control" />
 
 	<br>
 

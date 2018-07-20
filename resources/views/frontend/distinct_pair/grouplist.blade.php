@@ -6,7 +6,7 @@
 @endsection  
 
 @section('content')
-<div class="panel-heading" style='text-align: center'> <h2>List of coins of group {{$potential_group_id}} </h2></div>
+<div class="panel-heading" style="text-align:center"> <h2>List of coins of group {{$potential_group_id}} </h2></div>
 <div class="panel-body">
 	<table class="table" id="sorting-data-table">
 		<thead>
@@ -17,6 +17,8 @@
 				<th>Initial Price in USDT</th>
 				<th>Latest Price in USDT</th>
 				<th>Gain in percentage</th>
+				<th>Target Price in USDT</th>
+				<th>Progress percentage</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -27,13 +29,31 @@
 				<td>{{$pair['quote_name'] }}</td>
 				<td>{{$pair['initial_price'] }}</td>
 				<td>{{$pair['latest_price']}}</td>
-				<td>{{$pair['gain_in_percentage'] }} %</td>
+				@if($pair['gain_in_percentage'] < 0)
+				<td style="color: red;font-weight:bold">{{number_format((float)$pair['gain_in_percentage'], 2, '.', '') }} %</td>
+				@else
+				<td style="color: green; font-weight: bold">{{number_format((float)$pair['gain_in_percentage'], 2, '.', '') }} %</td>
+				@endif
+				<td>{{$pair['target_price']}}</td>
+				@if($pair['progress_percentage'] < 0)
+				<td style="color: red;font-weight:bold">{{number_format((float)$pair['progress_percentage'], 2, '.', '') }} %</td>
+				@else
+				<td style="color: green;font-weight:bold">{{number_format((float)$pair['progress_percentage'], 2, '.', '') }} %</td>
+				@endif
 			</tr>
 			@endforeach
 		</tbody>
 	</table>
-</div>
+	<div class="panel-footer">
+		<p>Note:</p> 
 
+		To find <strong>Gain in percentage</strong>:<br>
+		- First, work out the difference between the max price and price at the openning.<br> 
+		- Then, divide the increase by the price at the openning and multiply the answer by 100<br><br>
+		To find <strong>Progress percentage</strong>:<br>
+		- Divide the latest price by the target price and multiply the answer by 100<br>
+	</div>
+</div>
 @endsection
 
 @section('js')
@@ -42,7 +62,7 @@
 <script type="text/javascript">
     $(document).ready(function () {
         $('#sorting-data-table').DataTable({
-            "order": [[5, "desc"]]
+            "order": [[1, "desc"]]
         });
     });
 </script>

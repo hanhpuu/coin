@@ -3,8 +3,12 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/F:/Code/Laravel/Coin/resources/views/frontend/distinct_pair/create.blade.php</file>
+            <file>file:/F:/Code/Laravel/Coin/resources/views/frontend/distinct_pair/grouplist.blade.php</file>
+            <file>file:/F:/Code/Laravel/Coin/app/Http/Controllers/CurrencyPairController.php</file>
+            <file>file:/F:/Code/Laravel/Coin/resources/views/frontend/time/enter.blade.php</file>
+            <file>file:/F:/Code/Laravel/Coin/resources/views/frontend/time/fetch.blade.php</file>
             <file>file:/F:/Code/Laravel/Coin/app/DistinctPair.php</file>
+            <file>file:/F:/Code/Laravel/Coin/resources/views/welcome.blade.php</file>
             <file>file:/F:/Code/Laravel/Coin/app/Http/Controllers/DistinctPairController.php</file>
         </group>
     </open-files>

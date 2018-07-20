@@ -17,11 +17,6 @@ Route::get('/', function () {
 
 Auth::routes();
 
-Route::get('/home', 'HomeController@index')->name('home');
-
-Route::get('/price/past', 'PriceController@fetchAndSaveDataInPast');
-Route::get('/latest', 'DistinctPairController@SaveLatestPrice');
-
 Route::group(['middleware' => 'auth'], function() {
 	Route::resource('coins', 'CoinController', ['except' => ['delete']]);
 
@@ -35,4 +30,6 @@ Route::group(['middleware' => 'auth'], function() {
 	Route::post('/potential_group', 'DistinctPairController@checkPotentialGroupID');
 });
 
+Route::get('/time', 'CurrencyPairController@enterTime');
+Route::post('/time', 'CurrencyPairController@fetchDataDuringTime');
 

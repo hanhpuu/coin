@@ -103,6 +103,7 @@ class DistinctPairController extends Controller
 			$distinct_pair->priority = 2;
 		}
 		$distinct_pair->initial_price = $request->initial_price;
+		$distinct_pair->target_price = $request->target_price;
 		$distinct_pair->source_id = $request->source_id;
 		$distinct_pair->potential_group_id = $request->potential_group_id;
 		$distinct_pair->save();

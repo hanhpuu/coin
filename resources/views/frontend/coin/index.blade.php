@@ -6,11 +6,11 @@
 @endsection  
 
 @section('content')
+@if (Session::has('success'))
+<div class="alert alert-success" style="padding-left: 40px;">{{ Session::get('success') }}</div>
+@endif
 <div class="panel-heading"> <h2>List of coins</h2></div>
 <div class="panel-body">
-	@if (Session::has('success'))
-    <div class="alert alert-success">{{ Session::get('success') }}</div>
-    @endif
 	<table class="table" id='sorting-data-table'>
 		<thead>
 			<tr>

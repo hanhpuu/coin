@@ -9,11 +9,11 @@
 	<input name="_token" type="hidden" value="{{ csrf_token() }}"/>
 
 	<label for="base_id" >Base ID:</label>
-	<input type="number" name="base_id" id="base_id" class="form-control box-inside-form" />
+	<input type="number" name="base_id" id="base_id" class="form-control" />
 	<label for="quote_id">Quote ID:</label>
-	<input type="number" name="quote_id" id="quote_id" class="form-control box-inside-form" />
+	<input type="number" name="quote_id" id="quote_id" class="form-control" />
 	<label for="source_id">Source ID:</label>
-	<input type="number" name="source_id" id="source_id" class="form-control box-inside-form" />
+	<input type="number" name="source_id" id="source_id" class="form-control" />
 
 	<br>
 

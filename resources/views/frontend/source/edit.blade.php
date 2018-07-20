@@ -9,7 +9,7 @@
 	<input name="_token" type="hidden" value="{{ csrf_token() }}"/>
 
 	<label for="name">Name:</label>
-	<input type="text" name="name" id="name" class="form-control box-inside-form" value="{{ $source->name}}" />
+	<input type="text" name="name" id="name" class="form-control" value="{{ $source->name}}" />
 
 	<br>
 	{{ method_field('PUT') }}

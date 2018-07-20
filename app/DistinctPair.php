@@ -28,19 +28,21 @@ class DistinctPair extends Model
 		$id_array = self::where('potential_group_id', $request->potential_group_id)->pluck('id')->toArray();
 		$price_array = self::fetchPrice($id_array);
 		$name_array = self::fetchPairName($id_array);
-		$data = self::combinePriceArray($id_array,$price_array, $name_array);
+		$data = self::combinePriceArray($id_array, $price_array, $name_array);
 		return $data;
 	}
 
-	public static function combinePriceArray($id_array,$price_array,$name_array)
+	public static function combinePriceArray($id_array, $price_array, $name_array)
 	{
 		$result = [];
 		foreach ($id_array as $id) {
 			$index = $id;
 			if ($price_array[$index] && $name_array[$index]) {
-		        $gain_in_percentage = ($price_array[$index]['latest_price']/$price_array[$index]['initial_price']-1)*100 ;
-				$result[$index] = array_merge($price_array[$index],$name_array[$index]);
+				$gain_in_percentage = ($price_array[$index]['latest_price'] / $price_array[$index]['initial_price'] - 1) * 100;
+				$result[$index] = array_merge($price_array[$index], $name_array[$index]);
 				$result[$index]['gain_in_percentage'] = $gain_in_percentage;
+				$progress_percentage = ($price_array[$index]['latest_price'] / $price_array[$index]['target_price']) *100;
+				$result[$index]['progress_percentage'] = $progress_percentage;
 			}
 		}
 		usort($result, function($a, $b) {
@@ -52,7 +54,7 @@ class DistinctPair extends Model
 	public static function fetchPrice($id_array)
 	{
 		$price_array = array();
-		$ids = self::whereIn('potential_group_id', $id_array)->select('id', 'initial_price','latest_price')->get();
+		$ids = self::whereIn('id', $id_array)->select('id', 'initial_price', 'latest_price','target_price')->get();
 		foreach ($ids as $id) {
 			$value = $id->toArray();
 			$price_array[$id['id']] = $value;
@@ -65,7 +67,7 @@ class DistinctPair extends Model
 		$pair_name_arrays = DB::table('distinct_pairs')
 				->join('coins as c1', 'distinct_pairs.base_id', '=', 'c1.id')
 				->join('coins as c2', 'distinct_pairs.quote_id', '=', 'c2.id')
-				->whereIn('distinct_pairs.id', $id_array)		
+				->whereIn('distinct_pairs.id', $id_array)
 				->select('distinct_pairs.id', 'c1.name as base_name', 'c2.name as quote_name')
 				->get();
 		$name_array = [];
@@ -93,19 +95,20 @@ class DistinctPair extends Model
 					'base_id' => 'required|numeric|exists:coins,id',
 					'quote_id' => 'required|numeric|exists:coins,id',
 					'initial_price' => 'required|numeric',
+					'target_price' => 'required|numeric',
 					'potential_group_id' => 'required|numeric',
 					'source_id' => [
 						'required',
 						'numeric',
 						'exists:sources,id',
 						Rule::unique('distinct_pairs')->where(function ($query) use($request) {
-								$query->where('base_id', $request->base_id)->where('quote_id', $request->quote_id)->where('initial_price', $request->initial_price);
-							}),	
+									$query->where('base_id', $request->base_id)->where('quote_id', $request->quote_id)->where('initial_price', $request->initial_price);
+								}),
 					],
 		]);
 		return $validator;
 	}
-	
+
 	public static function insertNewDistinctPair($request)
 	{
 		$distinct_pair = $request->all();
@@ -122,12 +125,13 @@ class DistinctPair extends Model
 					'priority' => $priority,
 					'initial_price' => $distinct_pair['initial_price'],
 					'latest_price' => $distinct_pair['initial_price'],
+					'target_price' => $distinct_pair['target_price'],
 					'source_id' => $distinct_pair['source_id'],
 					'potential_group_id' => $distinct_pair['potential_group_id'],
 				]
 		);
 	}
-	
+
 	public static function SaveLatestPrice()
 	{
 		date_default_timezone_set('Asia/Bangkok');
@@ -135,19 +139,17 @@ class DistinctPair extends Model
 		$distinct_pairs = DistinctPair::whereDate('date_completed', '!=', $today)->orderBy('priority', 'asc')->get();
 		foreach ($distinct_pairs as $distinct_pair) {
 			$name_of_pair = CurrencyPair::getPairName($distinct_pair);
-			$current_url = Price::getURL($name_of_pair);
-			$raw_data = Price::getRawDataFromCurrentURL($current_url);
-			$number_of_raw_data = count($raw_data);
-			$latest_price_in_USDT = ($raw_data[$number_of_raw_data - 1][2] + $raw_data[$number_of_raw_data - 1][3]) / 2;
+			$current_url = "https://api.binance.com/api/v1/ticker/price?symbol=".$name_of_pair;
+			$raw_data = Price::getLatestPriceOfACoin($current_url);
+			$latest_price_in_USDT = $raw_data->price;
 			if ($distinct_pair->quote_id != 1) {
 				$currency_pair_in_USDT = DistinctPair::where('base_id', $distinct_pair->quote_id)
 								->where('quote_id', 1)->first();
-				$latest_price_in_USDT = $latest_price_in_USDT*$currency_pair_in_USDT['latest_price'];
+				$latest_price_in_USDT = $latest_price_in_USDT * $currency_pair_in_USDT['latest_price'];
 			}
 			$distinct_pair->latest_price = $latest_price_in_USDT;
 			$distinct_pair->date_completed = $today;
 			$distinct_pair->save();
 		}
 	}
-	
 }
