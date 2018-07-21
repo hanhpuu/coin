@@ -13,7 +13,7 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
-		\App\Console\Commands\fetchAndSaveCurrencyPairData::class,
+		\App\Console\Commands\fetchAndSaveCurrencyPairDataInPast::class,
 		\App\Console\Commands\fetchAndSaveLastestPriceOfDistinctPair::class,
     ];
 
@@ -25,8 +25,8 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {      
-		$schedule->command('fetchAndSaveCurrencyPairData')->daily();
-		$schedule->command('fetchAndSaveLastestPriceOfDistinctPair')->everyTenMinutes();;
+		$schedule->command('fetchAndSaveCurrencyPairDataInPast')->everyMinute();;
+		$schedule->command('fetchAndSaveLastestPriceOfDistinctPair')->everyTenMinutes();
 		
     }
 

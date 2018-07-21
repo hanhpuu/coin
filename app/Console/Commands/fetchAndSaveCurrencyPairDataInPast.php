@@ -5,21 +5,21 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Price;
 
-class fetchAndSaveCurrencyPairData extends Command
+class fetchAndSaveCurrencyPairDataInPast extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'fetchAndSaveCurrencyPairData';
+    protected $signature = 'fetchAndSaveCurrencyPairDataInPast';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Cron Job to save all the data every 15mins';
+    protected $description = 'Cron Job to save all the data in the past every 30mins';
 
     /**
      * Create a new command instance.
@@ -38,6 +38,6 @@ class fetchAndSaveCurrencyPairData extends Command
      */
     public function handle()
     {
-        Price::fetchAndSaveCurrencyPairData();   
+        Price::fetchAndSaveAllData();   
     }
 }

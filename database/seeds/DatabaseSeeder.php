@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
 		$this->call(CoinsTableSeeder::class);
 		$this->call(CurrencyPairTableSeeder::class);
 		$this->call(DistinctPairTableSeeder::class);
+		$this->call(UsersTableSeeder::class);
 	}
 
 }
