@@ -1,6 +1,6 @@
-<p align="center">Crappy Coins</p>
 
-## About website
+## About Crappy Coins
+
 
 It is a simple web application . 
 - Managing your personal favorite coins with featured information from Coinmarketcap.com and Binance.com (updated every 5 minutes).
