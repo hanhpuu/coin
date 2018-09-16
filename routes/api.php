@@ -32,7 +32,9 @@ Route::group(['middleware' => 'jwt.auth'], function () {
 	Route::post('coin/distinct/add','DistinctPairController@addDistinctPairsByAPI');
 	
 	Route::get('price/fluctuation','CurrencyPairController@checkPriceFluctuation');
+	
+	Route::get('potential_group', 'DistinctPairController@checkGainOfPotentialGroupByAPI');
 });
 
-Route::get('potential_group', 'DistinctPairController@checkGainOfPotentialGroupByAPI');
+
 
